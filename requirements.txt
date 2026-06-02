@@ -1,0 +1,7 @@
+Flask
+pandas
+pyxlsb
+openpyxl
+supabase
+requests
+watchdog
