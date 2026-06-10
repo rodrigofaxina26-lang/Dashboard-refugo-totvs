@@ -1,4 +1,5 @@
 # app.py - VERSÃO CORRIGIDA (MERGE FUNCIONANDO)
+import sys
 from flask import Flask, request, render_template
 import pandas as pd
 import requests
@@ -6,6 +7,10 @@ import json
 import os
 from datetime import datetime, date, timedelta
 import traceback
+
+# Evita UnicodeEncodeError ao usar emojis nos prints (console Windows usa cp1252)
+sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 SUPABASE_URL = "https://qrauhqqbwnaafljvvjxm.supabase.co"
 SUPABASE_KEY = "sb_publishable_Ik7kIP8JSUQi_R4iro7AGA_3qPEZto6"

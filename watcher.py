@@ -1,12 +1,17 @@
 # watcher.py — Monitora a planilha TOTVS e importa automaticamente ao detectar alteração
 # Deixe este script rodando em segundo plano. Sempre que a planilha for salva, a importação é disparada.
 
+import sys
 import time
 import os
-from watchdog.observers import Observer
+from watchdog.observers.polling import PollingObserver
 from watchdog.events import FileSystemEventHandler
 from datetime import datetime
 from importar import importar
+
+# Evita UnicodeEncodeError ao usar emojis nos prints (console Windows usa cp1252)
+sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 # ─── CONFIGURAÇÃO ────────────────────────────────────────────────────────────
 ARQUIVO_MONITORADO = r"P:\QUALIDADE\USUARIOS\00. Dept. Qualidade\07. Controle de Refugo\2026\Planilha de refugo diário Totvs.xlsx"
@@ -19,13 +24,13 @@ class MonitorPlanilha(FileSystemEventHandler):
     def __init__(self):
         self.ultimo_evento = 0  # Evita disparos duplos em sequência rápida
 
-    def on_modified(self, event):
+    def _processar(self, caminho):
         # Verifica se é exatamente o arquivo monitorado
-        if os.path.basename(event.src_path) != ARQUIVO:
+        if os.path.basename(caminho) != ARQUIVO:
             return
 
         agora = time.time()
-        # Aguarda 3 segundos para garantir que o Excel terminou de salvar
+        # Evita disparos duplos em sequência rápida
         if agora - self.ultimo_evento < 5:
             return
         self.ultimo_evento = agora
@@ -42,6 +47,17 @@ class MonitorPlanilha(FileSystemEventHandler):
         except Exception as e:
             print(f"\n❌ Erro durante importação: {e}")
 
+    def on_modified(self, event):
+        self._processar(event.src_path)
+
+    def on_created(self, event):
+        self._processar(event.src_path)
+
+    def on_moved(self, event):
+        # O Excel salva criando um arquivo temporário e renomeando-o
+        # para o nome original, o que gera um evento "moved".
+        self._processar(event.dest_path)
+
 def main():
     print("=" * 55)
     print("  👁️  MONITOR DE PLANILHA — ATIVO")
@@ -51,7 +67,7 @@ def main():
     print("=" * 55)
 
     handler  = MonitorPlanilha()
-    observer = Observer()
+    observer = PollingObserver(timeout=2)
     observer.schedule(handler, path=PASTA, recursive=False)
     observer.start()
 
