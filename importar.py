@@ -42,11 +42,12 @@ def importar():
     dados = df_raw.iloc[2:].copy()
 
     df = pd.DataFrame()
-    df['produto']    = dados.iloc[:, 1].values   # Coluna B - Produto
-    df['motivo_cod'] = dados.iloc[:, 3].values   # Coluna D - Motivo Perda (código defeito)
-    df['qtde']       = dados.iloc[:, 4].values   # Coluna E - Qtd Perda
-    df['data']       = dados.iloc[:, 5].values   # Coluna F - Dt. da Perda
-    df['tipo']       = dados.iloc[:, 12].values  # Coluna M - Tipo (SCI/SPR)
+    df['ord_producao'] = dados.iloc[:, 0].values   # Coluna A - Ordem de Produção (chave única)
+    df['produto']      = dados.iloc[:, 1].values   # Coluna B - Produto
+    df['motivo_cod']   = dados.iloc[:, 3].values   # Coluna D - Motivo Perda (código defeito)
+    df['qtde']         = dados.iloc[:, 4].values   # Coluna E - Qtd Perda
+    df['data']         = dados.iloc[:, 5].values   # Coluna F - Dt. da Perda
+    df['tipo']         = dados.iloc[:, 12].values  # Coluna M - Tipo (SCI/SPR)
 
     # 3. Limpeza
     df = df.dropna(subset=['produto'])
@@ -66,14 +67,17 @@ def importar():
     print(f"📊 Registros lidos:      {len(df)}")
     print(f"✅ Registros a gravar:   {len(df)}")
 
+    df['ord_producao'] = df['ord_producao'].astype(str).str.strip()
+
     # Converte para lista de dicts com tipos nativos Python (evita erro de serialização)
     registros = [
         {
-            'produto':    str(r['produto']),
-            'motivo_cod': str(r['motivo_cod']),
-            'qtde':       float(r['qtde']),
-            'data':       str(r['data']),
-            'tipo':       str(r['tipo'])
+            'ord_producao': str(r['ord_producao']),
+            'produto':      str(r['produto']),
+            'motivo_cod':   str(r['motivo_cod']),
+            'qtde':         float(r['qtde']),
+            'data':         str(r['data']),
+            'tipo':         str(r['tipo'])
         }
         for r in df.to_dict(orient='records')
     ]
