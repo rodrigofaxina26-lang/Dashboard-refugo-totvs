@@ -72,15 +72,12 @@ def importar():
 
     print(f"📊 Registros lidos:      {len(df)}")
 
-    # A planilha TOTVS pode ter linhas duplicadas pela mesma OP/motivo/data.
-    # Somamos a qtde das duplicatas para manter integridade com a constraint única.
-    dupl = df.duplicated(['ord_producao', 'motivo_cod', 'data'], keep=False).sum()
+    # Linhas com ord_producao igual são duplicatas de exportação do TOTVS — mantém só a primeira.
+    dupl = df.duplicated('ord_producao', keep=False).sum()
     if dupl:
-        df = (
-            df.groupby(['ord_producao', 'produto', 'motivo_cod', 'data', 'tipo'], as_index=False)
-            .agg({'qtde': 'sum'})
-        )
-        print(f"⚠️  {dupl} linhas duplicadas agrupadas → {len(df)} registros únicos")
+        antes = len(df)
+        df = df.drop_duplicates(subset='ord_producao', keep='first')
+        print(f"⚠️  {dupl} linhas duplicadas removidas → {len(df)} registros únicos (eram {antes})")
 
     print(f"✅ Registros a gravar:   {len(df)}")
 
