@@ -71,14 +71,6 @@ def importar():
     df['ord_producao'] = df['ord_producao'].astype(str).str.strip()
 
     print(f"📊 Registros lidos:      {len(df)}")
-
-    # Linhas com ord_producao igual são duplicatas de exportação do TOTVS — mantém só a primeira.
-    dupl = df.duplicated('ord_producao', keep=False).sum()
-    if dupl:
-        antes = len(df)
-        df = df.drop_duplicates(subset='ord_producao', keep='first')
-        print(f"⚠️  {dupl} linhas duplicadas removidas → {len(df)} registros únicos (eram {antes})")
-
     print(f"✅ Registros a gravar:   {len(df)}")
 
     # Converte para lista de dicts com tipos nativos Python (evita erro de serialização)
