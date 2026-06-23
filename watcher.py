@@ -19,20 +19,37 @@ ARQUIVO_MONITORADO = r"P:\QUALIDADE\USUARIOS\00. Dept. Qualidade\07. Controle de
 
 PASTA    = os.path.dirname(ARQUIVO_MONITORADO)
 ARQUIVO  = os.path.basename(ARQUIVO_MONITORADO)
+ARQUIVO_LOWER = ARQUIVO.lower()
 
 class MonitorPlanilha(FileSystemEventHandler):
     def __init__(self):
-        self.ultimo_evento = 0  # Evita disparos duplos em sequência rápida
+        self.ultimo_tamanho = 0
+        self.ultimo_evento = 0
+        self.arquivo_encontrado = os.path.isfile(ARQUIVO_MONITORADO)
 
     def _processar(self, caminho):
-        # Verifica se é exatamente o arquivo monitorado
-        if os.path.basename(caminho) != ARQUIVO:
+        basename = os.path.basename(caminho).lower()
+
+        # Verifica se é a planilha monitorada (ignora variações de acento/case)
+        if not basename.startswith('planilha de refugo'):
+            return
+        if not basename.endswith('.xlsx'):
             return
 
         agora = time.time()
-        # Evita disparos duplos em sequência rápida
-        if agora - self.ultimo_evento < 5:
+        # Evita disparos duplos em sequência rápida (mínimo 6 segundos)
+        if agora - self.ultimo_evento < 6:
             return
+
+        # Verifica tamanho do arquivo para confirmar que foi salvo
+        try:
+            tamanho = os.path.getsize(caminho)
+            if tamanho == self.ultimo_tamanho:
+                return
+            self.ultimo_tamanho = tamanho
+        except:
+            return
+
         self.ultimo_evento = agora
 
         print(f"\n{'='*55}")
@@ -63,11 +80,15 @@ def main():
     print("  👁️  MONITOR DE PLANILHA — ATIVO")
     print(f"  Arquivo: {ARQUIVO}")
     print(f"  Pasta  : {PASTA}")
+    print("  Polling: a cada 1 segundo")
     print("  Aguardando alterações... (Ctrl+C para parar)")
     print("=" * 55)
 
+    if not ARQUIVO_MONITORADO.endswith('.xlsx'):
+        print(f"⚠️  AVISO: Caminho não é .xlsx")
+
     handler  = MonitorPlanilha()
-    observer = PollingObserver(timeout=2)
+    observer = PollingObserver(timeout=1)  # Polling a cada 1 segundo
     observer.schedule(handler, path=PASTA, recursive=False)
     observer.start()
 
