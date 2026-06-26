@@ -259,6 +259,11 @@
 
 <div class="container">
 
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+        <label style="font-weight:700; color:#444;">📅 Mês:</label>
+        <input type="month" id="seletorMes" style="padding:8px 12px; border:1.5px solid #c9c0f7; border-radius:8px; font-size:1em;">
+        <button class="btn-azul" onclick="carregarTotaisMes()" style="padding:8px 18px;">Ver</button>
+    </div>
     <div class="totais-mes">
         <div class="card-total">
             <div class="titulo">📦 PEÇAS REFUGADAS NO MÊS</div>
@@ -521,9 +526,15 @@
         }
     }
 
+    // Inicializa seletor com mês atual
+    const agora = new Date();
+    document.getElementById('seletorMes').value = agora.getFullYear() + '-' + String(agora.getMonth()+1).padStart(2,'0');
+
     async function carregarTotaisMes() {
         try {
-            const res = await fetch('/totais_mes');
+            const mes = document.getElementById('seletorMes').value;
+            const url = mes ? `/totais_mes?mes=${mes}` : '/totais_mes';
+            const res = await fetch(url);
             const d   = await res.json();
             const fmt = (n) => n.toLocaleString('pt-BR');
             const fmtR$ = (n) => 'R$ ' + n.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});

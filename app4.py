@@ -374,14 +374,23 @@ def filtrar():
 
 @app.route("/totais_mes")
 def totais_mes():
-    hoje = date.today()
-    inicio_mes = hoje.replace(day=1)
-    force = True
-    df_sci, df_spr = data_source.carregar_dados(force_reload=force)
+    mes_param = request.args.get("mes", "")
+    if mes_param:
+        ano, mes = int(mes_param.split("-")[0]), int(mes_param.split("-")[1])
+        inicio_mes = date(ano, mes, 1)
+        if mes == 12:
+            fim_mes = date(ano + 1, 1, 1) - timedelta(days=1)
+        else:
+            fim_mes = date(ano, mes + 1, 1) - timedelta(days=1)
+    else:
+        hoje = date.today()
+        inicio_mes = hoje.replace(day=1)
+        fim_mes = hoje
+    df_sci, df_spr = data_source.carregar_dados(force_reload=True)
     df_total = pd.concat([df_sci, df_spr], ignore_index=True)
     if df_total.empty:
         return json.dumps({"qtde": 0, "custo": 0, "mes": inicio_mes.strftime("%m/%Y")})
-    df_mes = df_total[(df_total["DATA"] >= pd.to_datetime(inicio_mes)) & (df_total["DATA"] <= pd.to_datetime(hoje))]
+    df_mes = df_total[(df_total["DATA"] >= pd.to_datetime(inicio_mes)) & (df_total["DATA"] <= pd.to_datetime(fim_mes))]
     return json.dumps({
         "qtde": int(df_mes["QTDE"].sum()),
         "custo": float(df_mes["VALOR_CUSTO"].sum()),
