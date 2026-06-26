@@ -140,6 +140,21 @@
             box-shadow: var(--sombra);
         }
         .produto-card .card-title { color: var(--roxo); }
+
+        .totais-mes { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+        .card-total {
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            color: #fff;
+            border-radius: var(--radius);
+            padding: 24px 28px;
+            box-shadow: var(--sombra);
+            display: flex; flex-direction: column; gap: 8px;
+        }
+        .card-total.verde { background: linear-gradient(135deg, #059669 0%, #047857 100%); }
+        .card-total .titulo { font-size: 0.95em; opacity: 0.9; font-weight: 600; letter-spacing: 0.5px; }
+        .card-total .valor  { font-size: 2.4em; font-weight: 800; line-height: 1.1; }
+        .card-total .sub    { font-size: 0.85em; opacity: 0.85; }
+        @media (max-width: 700px) { .totais-mes { grid-template-columns: 1fr; } }
         .produto-input-row { display: flex; gap: 10px; align-items: center; }
         .produto-input-row input {
             flex: 1;
@@ -243,6 +258,19 @@
 </div>
 
 <div class="container">
+
+    <div class="totais-mes">
+        <div class="card-total">
+            <div class="titulo">📦 PEÇAS REFUGADAS NO MÊS</div>
+            <div class="valor" id="totalQtdeMes">—</div>
+            <div class="sub" id="totalQtdeMesLabel">carregando...</div>
+        </div>
+        <div class="card-total verde">
+            <div class="titulo">💰 VALOR REFUGADO NO MÊS</div>
+            <div class="valor" id="totalCustoMes">—</div>
+            <div class="sub" id="totalCustoMesLabel">carregando...</div>
+        </div>
+    </div>
 
     <div class="produto-card">
         <div class="card-title">🔍 Top 3 Defeitos por Produto</div>
@@ -493,7 +521,24 @@
         }
     }
 
+    async function carregarTotaisMes() {
+        try {
+            const res = await fetch('/totais_mes');
+            const d   = await res.json();
+            const fmt = (n) => n.toLocaleString('pt-BR');
+            const fmtR$ = (n) => 'R$ ' + n.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('totalQtdeMes').textContent       = fmt(d.qtde) + ' pç';
+            document.getElementById('totalQtdeMesLabel').textContent  = 'Mês ' + d.mes;
+            document.getElementById('totalCustoMes').textContent      = fmtR$(d.custo);
+            document.getElementById('totalCustoMesLabel').textContent = 'Mês ' + d.mes;
+        } catch(e) {
+            document.getElementById('totalQtdeMes').textContent  = 'Erro';
+            document.getElementById('totalCustoMes').textContent = 'Erro';
+        }
+    }
+
     carregarDados();
+    carregarTotaisMes();
 </script>
 </body>
 </html>

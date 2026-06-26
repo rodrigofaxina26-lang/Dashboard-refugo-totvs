@@ -372,6 +372,22 @@ def filtrar():
     }
     return json.dumps(dados_json)
 
+@app.route("/totais_mes")
+def totais_mes():
+    hoje = date.today()
+    inicio_mes = hoje.replace(day=1)
+    force = True
+    df_sci, df_spr = data_source.carregar_dados(force_reload=force)
+    df_total = pd.concat([df_sci, df_spr], ignore_index=True)
+    if df_total.empty:
+        return json.dumps({"qtde": 0, "custo": 0, "mes": inicio_mes.strftime("%m/%Y")})
+    df_mes = df_total[(df_total["DATA"] >= pd.to_datetime(inicio_mes)) & (df_total["DATA"] <= pd.to_datetime(hoje))]
+    return json.dumps({
+        "qtde": int(df_mes["QTDE"].sum()),
+        "custo": float(df_mes["VALOR_CUSTO"].sum()),
+        "mes": inicio_mes.strftime("%m/%Y")
+    })
+
 @app.route("/")
 def index():
     return render_template("index.html")
