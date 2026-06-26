@@ -397,6 +397,22 @@ def totais_mes():
         "mes": inicio_mes.strftime("%m/%Y")
     })
 
+@app.route("/runchart_mensal")
+def runchart_mensal():
+    df_sci, df_spr = data_source.carregar_dados(force_reload=True)
+    df_total = pd.concat([df_sci, df_spr], ignore_index=True)
+    if df_total.empty:
+        return json.dumps({"meses": [], "qtde": [], "custo": []})
+    df_total['MES'] = df_total['DATA'].dt.to_period('M')
+    agrupado = df_total.groupby('MES').agg({'QTDE': 'sum', 'VALOR_CUSTO': 'sum'}).reset_index()
+    agrupado = agrupado.sort_values('MES')
+    meses_label = [str(m) for m in agrupado['MES']]
+    return json.dumps({
+        "meses": meses_label,
+        "qtde": [int(v) for v in agrupado['QTDE']],
+        "custo": [round(float(v), 2) for v in agrupado['VALOR_CUSTO']]
+    })
+
 @app.route("/")
 def index():
     return render_template("index.html")

@@ -277,6 +277,11 @@
         </div>
     </div>
 
+    <div class="grid-2" style="margin-bottom:24px;">
+        <div class="card"><div id="runChartQtde"></div></div>
+        <div class="card"><div id="runChartCusto"></div></div>
+    </div>
+
     <div class="produto-card">
         <div class="card-title">🔍 Top 3 Defeitos por Produto</div>
         <div class="produto-input-row">
@@ -548,8 +553,47 @@
         }
     }
 
+    async function carregarRunChart() {
+        try {
+            const res = await fetch('/runchart_mensal');
+            const d   = await res.json();
+            const mesesPT = d.meses.map(m => {
+                const [a, mes] = m.split('-');
+                const nomes = ['','Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+                return nomes[parseInt(mes)] + '/' + a;
+            });
+            Plotly.newPlot('runChartQtde', [{
+                x: mesesPT, y: d.qtde, type: 'bar',
+                marker: {color: '#2563eb'},
+                text: d.qtde.map(v => v.toLocaleString('pt-BR')),
+                textposition: 'outside'
+            }], {
+                title: 'Run Chart — Quantidade por Mês',
+                xaxis: {title: ''},
+                yaxis: {title: 'Peças'},
+                margin: {t: 50, b: 40}
+            }, {responsive: true});
+
+            const custoFmt = d.custo.map(v => 'R$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits: 0, maximumFractionDigits: 0}));
+            Plotly.newPlot('runChartCusto', [{
+                x: mesesPT, y: d.custo, type: 'bar',
+                marker: {color: '#059669'},
+                text: custoFmt,
+                textposition: 'outside'
+            }], {
+                title: 'Run Chart — Custo (R$) por Mês',
+                xaxis: {title: ''},
+                yaxis: {title: 'R$'},
+                margin: {t: 50, b: 40}
+            }, {responsive: true});
+        } catch(e) {
+            console.error('Erro run chart:', e);
+        }
+    }
+
     carregarDados();
     carregarTotaisMes();
+    carregarRunChart();
 </script>
 </body>
 </html>
